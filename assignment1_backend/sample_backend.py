@@ -31,7 +31,6 @@ def get_users():
       users['users_list'].append(userToAdd)
       resp = jsonify(userToAdd), 201
       return resp
-      # 200 is the default code for a normal response
    elif request.method == 'DELETE':
       userToDelete = request.args.get('id')
       if userToDelete :
