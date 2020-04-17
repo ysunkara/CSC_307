@@ -31,14 +31,15 @@ def get_users():
       users['users_list'].append(userToAdd)
       resp = jsonify(success=True)
       resp.status_code = 201 #optionally, you can always set a response code.
+      return userToAdd
       # 200 is the default code for a normal response
       return resp
    elif request.method == 'DELETE':
-      userToDelete = request.args.get('name')
+      userToDelete = request.args.get('id')
       if userToDelete :
          subdict = {'users_list' : []}
          for user in users['users_list']:
-            if user['name'] == userToDelete:
+            if user['id'] == userToDelete:
                   subdict['users_list'].remove(user)
       resp = jsonify(success=True)
       # resp.status_code = 200 #optionally, you can always set a response code.
