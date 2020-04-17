@@ -2,6 +2,9 @@ from flask import Flask
 from flask import request
 from flask import jsonify
 from flask_cors import CORS
+import random
+from random import randint
+import string
 app = Flask(__name__)
 CORS(app)
 
@@ -13,20 +16,21 @@ def hello_world():
 def get_users():
    if request.method == 'GET':
       search_username = request.args.get('name')
-      search_job = request.args.get('job')
+      # search_job = request.args.get('job')
       if search_username :
          subdict = {'users_list' : []}
          for user in users['users_list']:
             if user['name'] == search_username:
-               if user['job'] == search_job:
+               # if user['job'] == search_job:
                   subdict['users_list'].append(user)
          return subdict
       return users
    elif request.method == 'POST':
       userToAdd = request.get_json()
+      userToAdd['id'] = id_generator()
       users['users_list'].append(userToAdd)
       resp = jsonify(success=True)
-      #resp.status_code = 200 #optionally, you can always set a response code.
+      resp.status_code = 201 #optionally, you can always set a response code.
       # 200 is the default code for a normal response
       return resp
    elif request.method == 'DELETE':
@@ -40,6 +44,9 @@ def get_users():
       # resp.status_code = 200 #optionally, you can always set a response code.
       # 200 is the default code for a normal response
       return resp
+def id_generator() :
+   id = ''.join(random.choice(string.ascii_lowercase) for x in range(3)) + str(randint(0,999))
+   return id
 
 @app.route('/users/<id>')
 def get_user(id):
