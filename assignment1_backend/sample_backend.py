@@ -42,7 +42,6 @@ def get_user(id):
    if id :
       if request.method == 'DELETE' :
          for user in users['users_list']:
-            print(user['id'], file=sys.stderr)
             if user['id'] == id:
                users['users_list'].remove(user)
          resp = jsonify(success = True), 200
