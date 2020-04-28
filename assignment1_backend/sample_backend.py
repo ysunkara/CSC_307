@@ -3,11 +3,45 @@ from flask import request
 from flask import jsonify
 from flask_cors import CORS
 import random
-from random import randint
 import string
-import sys
+from model_mongodb import User
+
+
 app = Flask(__name__)
-CORS(app)
+
+#CORS stands for Cross Origin Requests.
+CORS(app) #Here we'll allow requests coming from any domain. Not recommended for production environment.
+
+# users = {
+#     'users_list' :
+#     [
+#         {
+#             'id' : 'xyz789',
+#             'name' : 'Charlie',
+#             'job': 'Janitor',
+#         },
+#         # {
+#         #     'id' : 'abc123',
+#         #     'name': 'Mac',
+#         #     'job': 'Bouncer',
+#         # },
+#         # {
+#         #     'id' : 'ppp222',
+#         #     'name': 'Mac',
+#         #     'job': 'Professor',
+#         # },
+#         # {
+#         #     'id' : 'yat999',
+#         #     'name': 'Dee',
+#         #     'job': 'Aspring actress',
+#         # },
+#         # {
+#         #      'id' : 'zap555',
+#         #     'name': 'Dennis',
+#         #     'job': 'Bartender',
+#         # }
+#     ]
+# }
 
 @app.route('/')
 def hello_world():
@@ -15,73 +49,54 @@ def hello_world():
 
 @app.route('/users', methods=['GET', 'POST'])
 def get_users():
-   if request.method == 'GET':
-      search_username = request.args.get('name')
-      # search_job = request.args.get('job')
-      if search_username :
-         subdict = {'users_list' : []}
-         for user in users['users_list']:
-            if user['name'] == search_username:
-               # if user['job'] == search_job:
-                  subdict['users_list'].append(user)
-         return subdict
-      return users
-   elif request.method == 'POST':
-      userToAdd = request.get_json()
-      userToAdd['id'] = id_generator()
-      users['users_list'].append(userToAdd)
-      resp = jsonify(userToAdd), 201
-      return resp
+    if request.method == 'GET':
+        search_username = request.args.get('name')
+        search_job = request.args.get('job')
+        if search_username and search_job :
+            return find_users_by_name_job(search_username, search_job)
+        elif search_username :
+            # return find_users_by_name(search_username)
+            users = User().find_by_name(search_username)
+        else :
+            users = User().find_all()
+        return {"users_list": users}
+    elif request.method == 'POST':
+        userToAdd = request.get_json()
+        #userToAdd['id'] = generate_id()
+        #users['users_list'].append(userToAdd)
+        newUser = User(userToAdd)
+        newUser.save()
+        resp = jsonify(newUser), 201
+        return resp
 
-def id_generator() :
-   id = ''.join(random.choice(string.ascii_lowercase) for x in range(3)) + str(randint(0,999))
-   return id
-
-@app.route('/users/<id>', methods = ['GET','DELETE'])
+@app.route('/users/<id>', methods=['GET', 'DELETE'])
 def get_user(id):
-   if id :
-      if request.method == 'DELETE' :
-         for user in users['users_list']:
-            if user['id'] == id:
-               users['users_list'].remove(user)
-         resp = jsonify(success = True), 200
-         # resp.status_code = 200 #optionally, you can always set a response code.
-         # 200 is the default code for a normal response
-         return resp
-      elif request.method == 'GET' :
-         for user in users['users_list']:
-           if user['id'] == id:
-              return user
-         return ({})
-      return users
+    if request.method == 'GET':
+        print(id)
+        user = User({"_id":id})
+        user.reload()
+        return user
+    elif request.method == 'DELETE':
+        user = User({"_id": id})
+        resp = user.remove()
+        if resp["n"] == 1 :
+            return jsonify(success=True), 200
+        return {}, 204
 
-users = {
-   'users_list' :
-   [
-      {
-         'id' : 'xyz789',
-         'name' : 'Charlie',
-         'job': 'Janitor',
-      },
-      {
-         'id' : 'abc123',
-         'name': 'Mac',
-         'job': 'Bouncer',
-      },
-      {
-         'id' : 'ppp222',
-         'name': 'Mac',
-         'job': 'Professor',
-      },
-      {
-         'id' : 'yat999',
-         'name': 'Dee',
-         'job': 'Aspring actress',
-      },
-      {
-         'id' : 'zap555',
-         'name': 'Dennis',
-         'job': 'Bartender',
-      }
-   ]
-}
+# def find_users_by_name(name):
+#     subdict = {'users_list' : []}
+#     for user in users['users_list']:
+#         if user['name'] == name:
+#             subdict['users_list'].append(user)
+#     return subdict
+
+def find_users_by_name_job(name, job):
+    subdict = {'users_list' : []}
+    for user in subdict['users_list']:
+        if user['name'] == name and user['job'] == job:
+            subdict['users_list'].append(user)
+    return subdict
+
+# def generate_id():
+#     lettersAndDigits = string.ascii_letters + string.digits
+#     return ''.join((random.choice(lettersAndDigits) for i in range(6)))
